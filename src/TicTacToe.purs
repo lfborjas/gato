@@ -63,9 +63,9 @@ playAt pos@(Tuple rowPos colPos) game@{currentTurn, board, outcome} =
     stillInProgress _g = maybe (pure game) (const <<< Left $ "Game over!") outcome
     tileIsFree _g = maybe (pure game) (const <<< Left $ "Invalid move") $ markerAt pos board
     makeMove _g = do
-        row <- note "Invalid row" $ board !! rowPos
-        updatedRow <- note "Invalid column" $ updateAt colPos (Just currentTurn) row
-        note "Invalid row" $ updateAt rowPos updatedRow board
+        row <- board !! rowPos # note "Invalid row"
+        updatedRow <- updateAt colPos (Just currentTurn) row # note "Invalid column"
+        updateAt rowPos updatedRow board # note "Invalid row"
     updateState updatedBoard = 
       pure $ {currentTurn: (next currentTurn), board: updatedBoard, outcome: determineOutcome updatedBoard}
 
