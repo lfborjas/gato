@@ -3604,6 +3604,8 @@ var PS = {};
       return rows;
   })();
   exports["X"] = X;
+  exports["Tied"] = Tied;
+  exports["Victory"] = Victory;
   exports["blankBoard"] = blankBoard;
   exports["markerAt"] = markerAt;
   exports["playAt"] = playAt;
@@ -3671,7 +3673,7 @@ var PS = {};
           if (v instanceof Data_Maybe.Just) {
               return Data_Maybe.Nothing.value;
           };
-          throw new Error("Failed pattern match at App.GameBoard (line 57, column 7 - line 59, column 26): " + [ v.constructor.name ]);
+          throw new Error("Failed pattern match at App.GameBoard (line 62, column 7 - line 64, column 26): " + [ v.constructor.name ]);
       };
       var renderCell = function (row) {
           return function (col) {
@@ -3684,22 +3686,34 @@ var PS = {};
           return Halogen_HTML_Elements.tr_(Data_Functor.map(Data_Functor.functorArray)(renderCell(ix))(Data_Array.range(0)(2)));
       };
       var renderRows = Data_Functor.map(Data_Functor.functorArray)(renderRow)(Data_Array.range(0)(2));
-      return Halogen_HTML_Elements.div_([ Halogen_HTML_Elements.h1_([ Halogen_HTML_Core.text("(^._.^)\uff89 -- Gato") ]), status, Halogen_HTML_Elements.table_(renderRows), startOver(state.outcome), Halogen_HTML_Elements.p_([ Halogen_HTML_Elements.a([ Halogen_HTML_Properties.href("https://github.com/lfborjas/gato") ])([ Halogen_HTML_Core.text("Source") ]) ]) ]);
+      var cat = (function () {
+          if (state.outcome instanceof Data_Maybe.Nothing) {
+              return "(^._.^)\uff89";
+          };
+          if (state.outcome instanceof Data_Maybe.Just && state.outcome.value0 instanceof TicTacToe.Tied) {
+              return "(=;\u30a7;=)";
+          };
+          if (state.outcome instanceof Data_Maybe.Just && state.outcome.value0 instanceof TicTacToe.Victory) {
+              return "~(=^\u2025^)\u30ce\u2606";
+          };
+          throw new Error("Failed pattern match at App.GameBoard (line 48, column 7 - line 51, column 40): " + [ state.outcome.constructor.name ]);
+      })();
+      return Halogen_HTML_Elements.div_([ Halogen_HTML_Elements.h1_([ Halogen_HTML_Core.text(cat) ]), status, Halogen_HTML_Elements.table_(renderRows), startOver(state.outcome), Halogen_HTML_Elements.p_([ Halogen_HTML_Elements.a([ Halogen_HTML_Properties.href("https://github.com/lfborjas/gato") ])([ Halogen_HTML_Core.text("Source") ]) ]) ]);
   };
   var handleAction = function (dictMonadEffect) {
       return function (v) {
           if (v instanceof StartOver) {
               return Control_Monad_State_Class.modify_(Halogen_Query_HalogenM.monadStateHalogenM)(function (v1) {
-                  var $17 = {};
-                  for (var $18 in v1) {
-                      if ({}.hasOwnProperty.call(v1, $18)) {
-                          $17[$18] = v1[$18];
+                  var $21 = {};
+                  for (var $22 in v1) {
+                      if ({}.hasOwnProperty.call(v1, $22)) {
+                          $21[$22] = v1[$22];
                       };
                   };
-                  $17.currentTurn = TicTacToe.X.value;
-                  $17.board = TicTacToe.blankBoard;
-                  $17.outcome = Data_Maybe.Nothing.value;
-                  return $17;
+                  $21.currentTurn = TicTacToe.X.value;
+                  $21.board = TicTacToe.blankBoard;
+                  $21.outcome = Data_Maybe.Nothing.value;
+                  return $21;
               });
           };
           if (v instanceof MarkAt) {
@@ -3710,22 +3724,22 @@ var PS = {};
                   };
                   if (v1 instanceof Data_Either.Right) {
                       return Control_Monad_State_Class.modify_(Halogen_Query_HalogenM.monadStateHalogenM)(function (v2) {
-                          var $22 = {};
-                          for (var $23 in v2) {
-                              if ({}.hasOwnProperty.call(v2, $23)) {
-                                  $22[$23] = v2[$23];
+                          var $26 = {};
+                          for (var $27 in v2) {
+                              if ({}.hasOwnProperty.call(v2, $27)) {
+                                  $26[$27] = v2[$27];
                               };
                           };
-                          $22.currentTurn = v1.value0.currentTurn;
-                          $22.board = v1.value0.board;
-                          $22.outcome = v1.value0.outcome;
-                          return $22;
+                          $26.currentTurn = v1.value0.currentTurn;
+                          $26.board = v1.value0.board;
+                          $26.outcome = v1.value0.outcome;
+                          return $26;
                       });
                   };
-                  throw new Error("Failed pattern match at App.GameBoard (line 67, column 5 - line 70, column 84): " + [ v1.constructor.name ]);
+                  throw new Error("Failed pattern match at App.GameBoard (line 72, column 5 - line 75, column 84): " + [ v1.constructor.name ]);
               });
           };
-          throw new Error("Failed pattern match at App.GameBoard (line 62, column 16 - line 70, column 84): " + [ v.constructor.name ]);
+          throw new Error("Failed pattern match at App.GameBoard (line 67, column 16 - line 75, column 84): " + [ v.constructor.name ]);
       };
   };
   var component = function (dictMonadEffect) {
