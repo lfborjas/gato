@@ -2,7 +2,7 @@ module App.Button where
 
 import Data.Array (range)
 import Data.Either (Either(..))
-import Data.Maybe (Maybe(..), fromMaybe, maybe)
+import Data.Maybe (Maybe(..), fromMaybe, isJust, maybe)
 import Data.Monoid ((<>))
 import Data.Tuple (Tuple(..))
 import Effect.Class (class MonadEffect)
@@ -15,7 +15,9 @@ import TicTacToe (GameState, Marker(..), blankBoard, markerAt, playAt)
 
 type State = GameState 
 
-data Action = MarkAt (Tuple Int Int)
+data Action 
+  = MarkAt (Tuple Int Int)
+  | StartOver
 
 component :: forall q i o m. (MonadEffect m) => H.Component HH.HTML q i o m
 component =
@@ -30,9 +32,14 @@ render state =
   HH.div_
     [
       HH.text $ maybe "" (\w -> "The winner is" <> show w) state.winner,
-      HH.table_ (renderRows)
+      HH.table_ (renderRows),
+      startOver state.winner
     ]
   where
+    hasWinner = isJust state.winner
+    startOver Nothing = HH.span_ []
+    startOver _ = 
+      HH.button [HE.onClick \_ -> Just StartOver] [HH.text "Start Over"]
     renderRows = renderRow `map` range 0 2
     renderRow ix = HH.tr_ $ renderCell ix `map` range 0 2
     renderCell row col =
@@ -46,6 +53,8 @@ render state =
 
 handleAction :: forall cs o m. (MonadEffect m) => Action → H.HalogenM State Action cs o m Unit
 handleAction = case _ of
+  StartOver ->
+    H.modify_ _ {currentTurn = X, board = blankBoard, winner = Nothing}
   MarkAt pos -> do
     st <- H.get
     case (playAt pos st) of
