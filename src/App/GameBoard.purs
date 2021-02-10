@@ -12,7 +12,7 @@ import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Prelude (Unit, bind, map, show, ($))
-import TicTacToe (GameState, Marker(..), blankBoard, markerAt, playAt)
+import TicTacToe (GameOver(..), GameState, Marker(..), blankBoard, markerAt, playAt)
 
 type State = GameState 
 
@@ -32,7 +32,7 @@ render :: forall cs m. State -> H.ComponentHTML Action cs m
 render state =
   HH.div_
     [
-      HH.h1_ [HH.text "(^._.^)ﾉ -- Gato"],
+      HH.h1_ [HH.text cat],
       status,
       HH.table_ (renderRows),
       startOver state.outcome,
@@ -44,6 +44,11 @@ render state =
         HH.text $ maybe "" show state.outcome
       else
         HH.text $ "Current turn: " <> show state.currentTurn
+    cat =
+      case state.outcome of
+        Nothing -> "(^._.^)ﾉ"
+        Just Tied -> "(=;ェ;=)"
+        Just (Victory _) -> "~(=^‥^)ノ☆"
     startOver Nothing = HH.span_ []
     startOver _ = 
       HH.button [HE.onClick \_ -> Just StartOver] [HH.text "Start Over"]
