@@ -1,4 +1,4 @@
-module App.Button where
+module App.GameBoard where
 
 import Data.Array (range)
 import Data.Either (Either(..))
@@ -22,7 +22,7 @@ data Action
 component :: forall q i o m. (MonadEffect m) => H.Component HH.HTML q i o m
 component =
   H.mkComponent
-    { initialState: \_ ->  {currentTurn: X, board: blankBoard, winner: Nothing}
+    { initialState: \_ ->  {currentTurn: X, board: blankBoard, outcome: Nothing}
     , render
     , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
     }
@@ -31,12 +31,16 @@ render :: forall cs m. State -> H.ComponentHTML Action cs m
 render state =
   HH.div_
     [
-      HH.text $ maybe "" (\w -> "The winner is" <> show w) state.winner,
+      status,
       HH.table_ (renderRows),
-      startOver state.winner
+      startOver state.outcome
     ]
   where
-    hasWinner = isJust state.winner
+    status =
+      if isJust state.outcome then
+        HH.text $ maybe "" show state.outcome
+      else
+        HH.text $ "Current turn: " <> show state.currentTurn
     startOver Nothing = HH.span_ []
     startOver _ = 
       HH.button [HE.onClick \_ -> Just StartOver] [HH.text "Start Over"]
@@ -54,10 +58,10 @@ render state =
 handleAction :: forall cs o m. (MonadEffect m) => Action → H.HalogenM State Action cs o m Unit
 handleAction = case _ of
   StartOver ->
-    H.modify_ _ {currentTurn = X, board = blankBoard, winner = Nothing}
+    H.modify_ _ {currentTurn = X, board = blankBoard, outcome = Nothing}
   MarkAt pos -> do
     st <- H.get
     case (playAt pos st) of
       Left err -> H.liftEffect $ log $ "Error: " <> err
-      Right {currentTurn, board, winner} -> 
-        H.modify_ _ {currentTurn =  currentTurn, board = board , winner = winner}
+      Right {currentTurn, board, outcome} -> 
+        H.modify_ _ {currentTurn =  currentTurn, board = board , outcome = outcome}
