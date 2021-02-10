@@ -7,7 +7,7 @@ Simple tic-tac-toe (we call it Gato in Spanish!) in Purescript.
 ```sh
 npm install
 npm run build
-npm run serv
+npm run serve
 ```
 
 ## Bundling
@@ -15,3 +15,7 @@ npm run serv
 ```sh
 npm run build-prod
 ```
+
+## Credits
+
+Based on the halogen template: https://github.com/purescript-halogen/purescript-halogen-template
