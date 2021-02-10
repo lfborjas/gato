@@ -2,7 +2,7 @@ module App.GameBoard where
 
 import Data.Array (range)
 import Data.Either (Either(..))
-import Data.Maybe (Maybe(..), fromMaybe, isJust, maybe)
+import Data.Maybe (Maybe(..), isJust, maybe)
 import Data.Monoid ((<>))
 import Data.Tuple (Tuple(..))
 import Effect.Class (class MonadEffect)
@@ -10,7 +10,8 @@ import Effect.Class.Console (log)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
-import Prelude (Unit, bind, map, show, ($), (<$>))
+import Halogen.HTML.Properties as HP
+import Prelude (Unit, bind, map, show, ($))
 import TicTacToe (GameState, Marker(..), blankBoard, markerAt, playAt)
 
 type State = GameState 
@@ -31,9 +32,11 @@ render :: forall cs m. State -> H.ComponentHTML Action cs m
 render state =
   HH.div_
     [
+      HH.h1_ [HH.text "(^._.^)ﾉ -- Gato"],
       status,
       HH.table_ (renderRows),
-      startOver state.outcome
+      startOver state.outcome,
+      HH.p_ [HH.a [HP.href "https://github.com/lfborjas/gato"] [HH.text "Source"]]
     ]
   where
     status =
@@ -49,7 +52,7 @@ render state =
     renderCell row col =
       HH.td 
         [HE.onClick \_ ->  markIfEmpty (Tuple row col)]
-        [HH.text $ fromMaybe "" (show <$> markerAt (Tuple row col) state.board)]
+        [HH.text $ maybe "" show $ markerAt (Tuple row col) state.board]
     markIfEmpty pos =
       case (markerAt pos state.board) of
         Nothing -> Just $ MarkAt pos

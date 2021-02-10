@@ -3,12 +3,11 @@ module TicTacToe where
 import Prelude
 
 import Control.Alternative ((<|>))
-import Data.Array (catMaybes, concat, filter, findMap, fromFoldable, head, index, length, nub, null, range, replicate, updateAt, (!!))
 import Data.Either (Either(..), note)
-import Data.List (transpose)
-import Data.List as L
+import Data.List (List, catMaybes, concat, filter, findMap, head, index, length, nub, null, range, transpose, updateAt, (!!))
 import Data.Maybe (Maybe(..), fromMaybe, isNothing, maybe)
 import Data.Tuple (Tuple(..))
+import Data.Unfoldable (replicate)
 
 data Marker = X | O
 
@@ -22,7 +21,7 @@ instance showMarker :: Show Marker where
 type Tile = Maybe Marker
 type Position = Tuple Int Int
 
-type Board = Array (Array Tile)
+type Board = List (List Tile)
 
 data GameOver 
   = Tied
@@ -55,24 +54,20 @@ markerAt (Tuple rowPos colPos) board = do
   fromMaybe Nothing $ index row colPos
 
 playAt :: Position -> GameState -> Either String GameState
-playAt pos@(Tuple rowPos colPos) gs@{currentTurn, board, outcome} = do
-  gameOver <- maybe (pure unit) (const <<< Left $ "Game over!") outcome
-  occupied <- maybe (pure unit) (const <<< Left $ "Invalid move") $ markerAt pos board
-  row <- note "Invalid row" $ board !! rowPos
-  updatedRow <- note "Invalid column" $ updateAt colPos (Just currentTurn) row
-  updatedBoard <- note "Invalid row" $ updateAt rowPos updatedRow board
-  pure $ {currentTurn: nextTurn, board: updatedBoard, outcome: determineOutcome updatedBoard}
+playAt pos@(Tuple rowPos colPos) game@{currentTurn, board, outcome} =
+  stillInProgress game 
+    >>= tileIsFree
+    >>= makeMove
+    >>= updateState
   where
-    nextTurn = next currentTurn
-
-winsRow :: Array Tile -> Maybe Marker
-winsRow r = 
-  if length occupied == 3 && length (nub occupied) == 1 then
-    head occupied
-  else
-    Nothing
-  where
-    occupied = catMaybes r
+    stillInProgress _g = maybe (pure game) (const <<< Left $ "Game over!") outcome
+    tileIsFree _g = maybe (pure game) (const <<< Left $ "Invalid move") $ markerAt pos board
+    makeMove _g = do
+        row <- note "Invalid row" $ board !! rowPos
+        updatedRow <- note "Invalid column" $ updateAt colPos (Just currentTurn) row
+        note "Invalid row" $ updateAt rowPos updatedRow board
+    updateState updatedBoard = 
+      pure $ {currentTurn: (next currentTurn), board: updatedBoard, outcome: determineOutcome updatedBoard}
 
 determineOutcome :: Board -> Maybe GameOver
 determineOutcome board = 
@@ -83,16 +78,22 @@ determineOutcome board =
 
 findWinner :: Board -> Maybe Marker
 findWinner board =
-  findMap winsRow rows <|> findMap winsRow cols <|> findMap winsRow diagonals
+  findMap rowVictor rows <|> findMap rowVictor cols <|> findMap rowVictor diagonals
   where
     rows = board
-    -- FIXME(luis) this is of course very wasteful, indicative that maybe I
-    -- want to hand-write it, or use Lists throughout (Array weirdly has more
-    -- convenience functions readily available?)
-    cols = fromFoldable $ map fromFoldable $ transpose (L.fromFoldable $ map  L.fromFoldable board)
+    cols = transpose board
     diagonals = 
       [map (\i -> markerAt (Tuple i  i) board) (range 0 2)
       , map (\i -> markerAt (Tuple (i-1) (3-i)) board) (range 1 3)]
+
+rowVictor :: List Tile -> Maybe Marker
+rowVictor r = 
+  if length occupied == 3 && length (nub occupied) == 1 then
+    head occupied
+  else
+    Nothing
+  where
+    occupied = catMaybes r
 
 isTie :: Board -> Boolean
 isTie = 
