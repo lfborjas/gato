@@ -55,14 +55,14 @@ markerAt (Tuple rowPos colPos) board = do
 
 playAt :: Position -> GameState -> Either String GameState
 playAt pos@(Tuple rowPos colPos) game@{currentTurn, board, outcome} =
-  stillInProgress game 
-    >>= tileIsFree
-    >>= makeMove
+  stillInProgress 
+    <* tileIsFree 
+    *> makeMove
     >>= updateState
   where
-    stillInProgress _g = maybe (pure game) (const <<< Left $ "Game over!") outcome
-    tileIsFree _g = maybe (pure game) (const <<< Left $ "Invalid move") $ markerAt pos board
-    makeMove _g = do
+    stillInProgress = maybe (pure unit) (const <<< Left $ "Game over!") outcome
+    tileIsFree = maybe (pure unit) (const <<< Left $ "Invalid move") $ markerAt pos board
+    makeMove = do
         row <- board !! rowPos # note "Invalid row"
         updatedRow <- updateAt colPos (Just currentTurn) row # note "Invalid column"
         updateAt rowPos updatedRow board # note "Invalid row"
